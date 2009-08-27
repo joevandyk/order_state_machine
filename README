@@ -1,0 +1,5 @@
+== A simple state machine for modelling e-commerce orders 
+
+Uses this state machine: http://github.com/pluginaweek/state_machine/tree/master
+
+There's no controller/views, just activerecord.  Clone and run 'rake'.
