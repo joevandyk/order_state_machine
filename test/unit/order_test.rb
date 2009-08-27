@@ -12,6 +12,13 @@ class OrderTest < ActiveSupport::TestCase
     assert @free_order.cancelled?
   end
 
+  test "if order can't be authorized, delete it" do
+    o = Order.new :total => 10, :bad_card => true
+    o.save rescue Order::BillingError
+    assert o.new_record?
+    assert o.errors.on(:bad_card)
+  end
+
   test "can cancel paid order" do
     @paid_order.cancel!
   end

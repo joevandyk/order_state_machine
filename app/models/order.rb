@@ -1,6 +1,10 @@
 class Order < ActiveRecord::Base
+  class BillingError < RuntimeError; end
+
+  after_create :process
   after_create :log_creation
-  after_create :process!
+
+  attr_accessor :bad_card
 
   has_many :audits, :class_name => 'OrderAudit', :order => 'id asc'
 
@@ -43,6 +47,8 @@ class Order < ActiveRecord::Base
       transition :preparing_for_shipping => :shipped
     end
 
+    before_transition :to => :authorized, :do => :execute_authorization
+
     after_transition do |o, transition|
       o.log "is #{transition.to.humanize}"
     end
@@ -63,5 +69,14 @@ class Order < ActiveRecord::Base
 
   def log_creation
     log "has been placed"
+  end
+
+  def execute_authorization
+    if @bad_card.present?
+      errors.add(:bad_card, "is bad")
+      # Not thrilled about this, but we have to stop the record from being saved.
+      # And state_machine seems to only work properly on saved records.
+      raise BillingError.new
+    end
   end
 end
